@@ -45,10 +45,23 @@ import org.xml.sax.SAXParseException;
  */
 public class XPathParser {
 
+  // XML被解析后的Document对象
   private final Document document;
+
+  // 是否校验XML格式正确性，一般为true
   private boolean validation;
+
+  /**
+   * XML实体解析器，对XML进行校验，需要网络加载DTD文件，这个类可以实现本地加载DTD
+   * {@link org.apache.ibatis.builder.xml.XMLMapperEntityResolver}
+   */
   private EntityResolver entityResolver;
+
+  // 变量Properties对象，用来替换需要动态配置的属性值
+  // 可以使用mybatis配置文件中的<property/>标签进行配置
   private Properties variables;
+
+  // 用于查询XML的节点和元素
   private XPath xpath;
 
   public XPathParser(String xml) {
