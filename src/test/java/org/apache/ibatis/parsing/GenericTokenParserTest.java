@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 public class GenericTokenParserTest {
 
@@ -38,6 +39,21 @@ public class GenericTokenParserTest {
     public String handleToken(String content) {
       return variables.get(content);
     }
+  }
+
+  @Test
+  public void testSelf() {
+    Properties properties = new Properties();
+    properties.put("first_name", "James");
+    properties.put("last_name", "Kirk");
+    properties.put("initial", "T");
+    properties.put("var{with}brace", "Hiya");
+    properties.put("", "");
+
+//    GenericTokenParser parser = new GenericTokenParser("${", "}",
+//            new PropertyParser.VariableTokenHandler(properties));
+
+//    assertEquals("Hiya", parser.parse("${var{with\\}brace}"));
   }
 
   @Test
