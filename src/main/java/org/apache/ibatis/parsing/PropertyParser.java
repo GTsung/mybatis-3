@@ -57,8 +57,17 @@ public class PropertyParser {
   }
 
   private static class VariableTokenHandler implements TokenHandler {
+    // Properties对象
     private final Properties variables;
+
+    /**
+     * 是否开启默认值功能，默认{@link #ENABLE_DEFAULT_VALUE}
+     */
     private final boolean enableDefaultValue;
+
+    /**
+     * 默认分隔符，{@link #DEFAULT_VALUE_SEPARATOR}
+     */
     private final String defaultValueSeparator;
 
     private VariableTokenHandler(Properties variables) {
@@ -75,7 +84,9 @@ public class PropertyParser {
     public String handleToken(String content) {
       if (variables != null) {
         String key = content;
+        // 开启默认值功能
         if (enableDefaultValue) {
+          // 查找默认值
           final int separatorIndex = content.indexOf(defaultValueSeparator);
           String defaultValue = null;
           if (separatorIndex >= 0) {
@@ -83,9 +94,11 @@ public class PropertyParser {
             defaultValue = content.substring(separatorIndex + defaultValueSeparator.length());
           }
           if (defaultValue != null) {
+            // 有默认值优先替换，不存在则返回默认值
             return variables.getProperty(key, defaultValue);
           }
         }
+        // 未开启默认值则直接替换
         if (variables.containsKey(key)) {
           return variables.getProperty(key);
         }
