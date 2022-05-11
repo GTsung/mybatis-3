@@ -28,6 +28,11 @@ public final class PropertyNamer {
     // Prevent Instantiation of Static Class
   }
 
+  /**
+   * 根据方法名，获得对应的属性名
+   * @param name
+   * @return
+   */
   public static String methodToProperty(String name) {
     if (name.startsWith("is")) {
       name = name.substring(2);
@@ -38,6 +43,7 @@ public final class PropertyNamer {
     }
 
     if (name.length() == 1 || (name.length() > 1 && !Character.isUpperCase(name.charAt(1)))) {
+      // 将属性名称第一个字符改为小写
       name = name.substring(0, 1).toLowerCase(Locale.ENGLISH) + name.substring(1);
     }
 
