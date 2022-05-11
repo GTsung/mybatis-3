@@ -18,26 +18,51 @@ package org.apache.ibatis.reflection.property;
 import java.util.Iterator;
 
 /**
+ * 属性分词器，在访问 "order[0].item[0].name" 时，可拆分为 "order[0]"、"item[0]"、"name" 三段
  * @author Clinton Begin
  */
 public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
+
+  /**
+   * 当前字符串
+   */
   private String name;
+
+  /**
+   * 索引的{@link #name}，{@link #name}如果存在则 {@link #index} 会被更改
+   */
   private final String indexedName;
+
+  /**
+   * 编号
+   * 对于数组 name[0]，则index = 0
+   * 对于 Map map[key]，则index = key
+   */
   private String index;
+
+  /**
+   * 剩余字符串
+   */
   private final String children;
 
   public PropertyTokenizer(String fullname) {
+    // 找到"."分隔符的索引
     int delim = fullname.indexOf('.');
     if (delim > -1) {
+      // 分割，name为第一个，剩余的放在children中
       name = fullname.substring(0, delim);
       children = fullname.substring(delim + 1);
     } else {
+      // 否则name为整个
       name = fullname;
       children = null;
     }
+    // 记录当前name
     indexedName = name;
     delim = name.indexOf('[');
     if (delim > -1) {
+      // 如果name = [t] 则最终index = t; name = ""
+      // 如果name = k[t] 则最终index = t; name = k
       index = name.substring(delim + 1, name.length() - 1);
       name = name.substring(0, delim);
     }
@@ -66,6 +91,7 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
 
   @Override
   public PropertyTokenizer next() {
+    // 迭代器模式
     return new PropertyTokenizer(children);
   }
 
