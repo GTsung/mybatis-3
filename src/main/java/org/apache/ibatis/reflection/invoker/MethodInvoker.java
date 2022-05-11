@@ -25,15 +25,20 @@ import org.apache.ibatis.reflection.Reflector;
  */
 public class MethodInvoker implements Invoker {
 
+  // 类型
   private final Class<?> type;
+
+  // 指定方法
   private final Method method;
 
   public MethodInvoker(Method method) {
     this.method = method;
 
+    // 方法参数长度为1时，一般为set方法
     if (method.getParameterTypes().length == 1) {
       type = method.getParameterTypes()[0];
     } else {
+      // 否则一般是get方法，设置Type为返回类型
       type = method.getReturnType();
     }
   }
