@@ -28,6 +28,12 @@ public final class PropertyCopier {
     // Prevent Instantiation of Static Class
   }
 
+  /**
+   * 将原对象的所有属性值赋值给目的对象
+   * @param type 指定类型
+   * @param sourceBean 原对象
+   * @param destinationBean 目的对象
+   */
   public static void copyBeanProperties(Class<?> type, Object sourceBean, Object destinationBean) {
     Class<?> parent = type;
     while (parent != null) {
@@ -35,6 +41,7 @@ public final class PropertyCopier {
       for(Field field : fields) {
         try {
           try {
+            // 赋值
             field.set(destinationBean, field.get(sourceBean));
           } catch (IllegalAccessException e) {
             if (Reflector.canControlMemberAccessible()) {
@@ -48,6 +55,7 @@ public final class PropertyCopier {
           // Nothing useful to do, will only fail on final fields, which will be ignored.
         }
       }
+      // 获取当前类型的父类型
       parent = parent.getSuperclass();
     }
   }
