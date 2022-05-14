@@ -25,6 +25,7 @@ import org.apache.ibatis.session.TransactionIsolationLevel;
 import org.apache.ibatis.transaction.Transaction;
 
 /**
+ * 事务的管理交给了容器
  * {@link Transaction} that lets the container manage the full lifecycle of the transaction.
  * Delays connection retrieval until getConnection() is called.
  * Ignores all commit or rollback requests.
@@ -41,6 +42,10 @@ public class ManagedTransaction implements Transaction {
   private DataSource dataSource;
   private TransactionIsolationLevel level;
   private Connection connection;
+
+  /**
+   * 是否关闭连接
+   */
   private final boolean closeConnection;
 
   public ManagedTransaction(Connection connection, boolean closeConnection) {

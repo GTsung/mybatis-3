@@ -25,6 +25,7 @@ import org.apache.ibatis.transaction.Transaction;
 import org.apache.ibatis.transaction.TransactionFactory;
 
 /**
+ * 实际真正使用的 [SpringManagedTransactionFactory]
  * Creates {@link ManagedTransaction} instances.
  *
  * @author Clinton Begin
@@ -33,11 +34,15 @@ import org.apache.ibatis.transaction.TransactionFactory;
  */
 public class ManagedTransactionFactory implements TransactionFactory {
 
+  /**
+   * 是否关闭连接
+   */
   private boolean closeConnection = true;
 
   @Override
   public void setProperties(Properties props) {
     if (props != null) {
+      // 获取是否关闭连接的属性
       String closeConnectionProperty = props.getProperty("closeConnection");
       if (closeConnectionProperty != null) {
         closeConnection = Boolean.valueOf(closeConnectionProperty);
