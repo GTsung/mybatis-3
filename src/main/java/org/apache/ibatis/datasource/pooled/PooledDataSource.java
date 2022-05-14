@@ -42,16 +42,43 @@ public class PooledDataSource implements DataSource {
 
   private final PoolState state = new PoolState(this);
 
+  // PooledDataSource组合了UnpooledDataSource
   private final UnpooledDataSource dataSource;
 
   // OPTIONAL CONFIGURATION FIELDS
+
+  /**
+   * 正在使用的连接数量
+   */
   protected int poolMaximumActiveConnections = 10;
+
+  /**
+   * 任意时间可能存在的空闲连接数
+   */
   protected int poolMaximumIdleConnections = 5;
+
+  /**
+   * 被强制返回前，池中连接被检出时间
+   */
   protected int poolMaximumCheckoutTime = 20000;
+
+  /**
+   * 获取连接花费的时间大于此，则连接池会新建一个连接
+   */
   protected int poolTimeToWait = 20000;
+
+  /**
+   * 坏链接容忍度，对于每个从连接池中获取连接的线程来说，允许这个线程重新从连接池中获取连接
+   */
   protected int poolMaximumLocalBadConnectionTolerance = 3;
+
+  /**
+   * 发送到数据库的侦测查询
+   */
   protected String poolPingQuery = "NO PING QUERY SET";
+
   protected boolean poolPingEnabled;
+
   protected int poolPingConnectionsNotUsedFor;
 
   private int expectedConnectionTypeCode;
