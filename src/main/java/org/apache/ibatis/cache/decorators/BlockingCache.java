@@ -36,8 +36,16 @@ import org.apache.ibatis.cache.CacheException;
  */
 public class BlockingCache implements Cache {
 
+  /**
+   * 阻塞等待时间
+   */
   private long timeout;
+
   private final Cache delegate;
+
+  /**
+   * 缓存键与ReentrantLock对象的映射
+   */
   private final ConcurrentHashMap<Object, ReentrantLock> locks;
 
   public BlockingCache(Cache delegate) {
@@ -58,8 +66,10 @@ public class BlockingCache implements Cache {
   @Override
   public void putObject(Object key, Object value) {
     try {
+      // 添加缓存
       delegate.putObject(key, value);
     } finally {
+      // 释放锁
       releaseLock(key);
     }
   }
@@ -91,12 +101,19 @@ public class BlockingCache implements Cache {
     return null;
   }
 
+  /**
+   * 获得ReentrantLock，不存在则添加
+   * @param key
+   * @return
+   */
   private ReentrantLock getLockForKey(Object key) {
     return locks.computeIfAbsent(key, k -> new ReentrantLock());
   }
 
   private void acquireLock(Object key) {
+    // 获取锁
     Lock lock = getLockForKey(key);
+    // 未超时时获取锁
     if (timeout > 0) {
       try {
         boolean acquired = lock.tryLock(timeout, TimeUnit.MILLISECONDS);
@@ -113,6 +130,7 @@ public class BlockingCache implements Cache {
 
   private void releaseLock(Object key) {
     ReentrantLock lock = locks.get(key);
+    // 如果当前线程持有锁则释放
     if (lock.isHeldByCurrentThread()) {
       lock.unlock();
     }

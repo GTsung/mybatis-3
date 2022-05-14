@@ -42,6 +42,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 public interface Cache {
 
   /**
+   * 标识
    * @return The identifier of this cache
    */
   String getId();
@@ -87,6 +88,7 @@ public interface Cache {
   int getSize();
 
   /**
+   * 获得读取写锁，未使用
    * Optional. As of 3.2.6 this method is no longer called by the core.
    *
    * Any locking needed by the cache must be provided internally by the cache provider.

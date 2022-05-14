@@ -26,9 +26,24 @@ import org.apache.ibatis.logging.LogFactory;
  */
 public class LoggingCache implements Cache {
 
+  /**
+   * Mybatis的Log对象
+   */
   private final Log log;
+
+  /**
+   * 装饰的Cache
+   */
   private final Cache delegate;
+
+  /**
+   * 请求缓存的次数
+   */
   protected int requests = 0;
+
+  /**
+   * 命中缓存的次数
+   */
   protected int hits = 0;
 
   public LoggingCache(Cache delegate) {
@@ -53,9 +68,11 @@ public class LoggingCache implements Cache {
 
   @Override
   public Object getObject(Object key) {
+    // 请求次数增加
     requests++;
     final Object value = delegate.getObject(key);
     if (value != null) {
+      // 命中次数增加
       hits++;
     }
     if (log.isDebugEnabled()) {
