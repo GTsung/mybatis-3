@@ -22,6 +22,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import org.apache.ibatis.cache.Cache;
 
 /**
+ * 最少使用的淘汰机制
  * Lru (least recently used) cache decorator
  *
  * @author Clinton Begin
@@ -30,6 +31,10 @@ public class LruCache implements Cache {
 
   private final Cache delegate;
   private Map<Object, Object> keyMap;
+
+  /**
+   * 最老的键，被淘汰
+   */
   private Object eldestKey;
 
   public LruCache(Cache delegate) {
@@ -48,11 +53,14 @@ public class LruCache implements Cache {
   }
 
   public void setSize(final int size) {
+    // 整个LinkedHashMap用于实现LRU，只需要将removeEldestEntry方法返回true就能移除
+    // 这里的元素顺序是访问顺序
     keyMap = new LinkedHashMap<Object, Object>(size, .75F, true) {
       private static final long serialVersionUID = 4267176411845948333L;
 
       @Override
       protected boolean removeEldestEntry(Map.Entry<Object, Object> eldest) {
+        // 如果容量超过限制则将最老没有使用过的key进行标记
         boolean tooBig = size() > size;
         if (tooBig) {
           eldestKey = eldest.getKey();
@@ -70,6 +78,7 @@ public class LruCache implements Cache {
 
   @Override
   public Object getObject(Object key) {
+    // 如果key被访问，LinkedHashMap内部会将这个key放在链表末尾
     keyMap.get(key); //touch
     return delegate.getObject(key);
   }
@@ -91,8 +100,10 @@ public class LruCache implements Cache {
   }
 
   private void cycleKeyList(Object key) {
+    // 将key放入到LinkedHashMap
     keyMap.put(key, key);
     if (eldestKey != null) {
+      // 判断将要淘汰的key非空则对缓存中的此key进行删除
       delegate.removeObject(eldestKey);
       eldestKey = null;
     }
