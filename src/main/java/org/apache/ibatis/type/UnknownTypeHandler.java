@@ -30,8 +30,14 @@ import org.apache.ibatis.io.Resources;
  */
 public class UnknownTypeHandler extends BaseTypeHandler<Object> {
 
+  /**
+   * ObjectTypeHandler单例
+   */
   private static final ObjectTypeHandler OBJECT_TYPE_HANDLER = new ObjectTypeHandler();
 
+  /**
+   * TypeHandler 注册表
+   */
   private TypeHandlerRegistry typeHandlerRegistry;
 
   public UnknownTypeHandler(TypeHandlerRegistry typeHandlerRegistry) {
@@ -41,24 +47,31 @@ public class UnknownTypeHandler extends BaseTypeHandler<Object> {
   @Override
   public void setNonNullParameter(PreparedStatement ps, int i, Object parameter, JdbcType jdbcType)
       throws SQLException {
+    // 获得参数对应的处理器
     TypeHandler handler = resolveTypeHandler(parameter, jdbcType);
+    // 使用handler设置参数
     handler.setParameter(ps, i, parameter, jdbcType);
   }
 
   @Override
   public Object getNullableResult(ResultSet rs, String columnName)
       throws SQLException {
+    // 获得参数对应的处理器
     TypeHandler<?> handler = resolveTypeHandler(rs, columnName);
+    // 使用handler获得值
     return handler.getResult(rs, columnName);
   }
 
   @Override
   public Object getNullableResult(ResultSet rs, int columnIndex)
       throws SQLException {
+    // 获得参数对应的处理器
     TypeHandler<?> handler = resolveTypeHandler(rs.getMetaData(), columnIndex);
+    // 如果找不到对应处理器则使用ObjectTypeHandler
     if (handler == null || handler instanceof UnknownTypeHandler) {
       handler = OBJECT_TYPE_HANDLER;
     }
+    // 使用handler获取值
     return handler.getResult(rs, columnIndex);
   }
 
@@ -70,11 +83,14 @@ public class UnknownTypeHandler extends BaseTypeHandler<Object> {
 
   private TypeHandler<? extends Object> resolveTypeHandler(Object parameter, JdbcType jdbcType) {
     TypeHandler<? extends Object> handler;
+    // 参数为空，直接使用ObjectTypeHandler
     if (parameter == null) {
       handler = OBJECT_TYPE_HANDLER;
     } else {
+      // 参数非空，则使用参数类型获得对应的TypeHandler
       handler = typeHandlerRegistry.getTypeHandler(parameter.getClass(), jdbcType);
       // check if handler is null (issue #270)
+      // 获取不到，则使用ObjectTypeHandler
       if (handler == null || handler instanceof UnknownTypeHandler) {
         handler = OBJECT_TYPE_HANDLER;
       }
@@ -87,14 +103,20 @@ public class UnknownTypeHandler extends BaseTypeHandler<Object> {
       Map<String,Integer> columnIndexLookup;
       columnIndexLookup = new HashMap<>();
       ResultSetMetaData rsmd = rs.getMetaData();
+      // 通过ResultSetMetaData获取字段总数
       int count = rsmd.getColumnCount();
+      // 遍历字段
       for (int i=1; i <= count; i++) {
+        // 获取字段名称
         String name = rsmd.getColumnName(i);
+        // 缓存字段名称及顺序
         columnIndexLookup.put(name,i);
       }
+      // 得到字段索引
       Integer columnIndex = columnIndexLookup.get(column);
       TypeHandler<?> handler = null;
       if (columnIndex != null) {
+        // 获取处理器
         handler = resolveTypeHandler(rsmd, columnIndex);
       }
       if (handler == null || handler instanceof UnknownTypeHandler) {
@@ -108,8 +130,11 @@ public class UnknownTypeHandler extends BaseTypeHandler<Object> {
 
   private TypeHandler<?> resolveTypeHandler(ResultSetMetaData rsmd, Integer columnIndex) {
     TypeHandler<?> handler = null;
+    // 获取jdbcType类型
     JdbcType jdbcType = safeGetJdbcTypeForColumn(rsmd, columnIndex);
+    // 获取javaType类型
     Class<?> javaType = safeGetClassForColumn(rsmd, columnIndex);
+    // 从注册器中获取对应处理类
     if (javaType != null && jdbcType != null) {
       handler = typeHandlerRegistry.getTypeHandler(javaType, jdbcType);
     } else if (javaType != null) {

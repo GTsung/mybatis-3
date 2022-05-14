@@ -27,6 +27,9 @@ import java.lang.reflect.Type;
  */
 public abstract class TypeReference<T> {
 
+  /**
+   * 泛型
+   */
   private final Type rawType;
 
   protected TypeReference() {
@@ -34,6 +37,7 @@ public abstract class TypeReference<T> {
   }
 
   Type getSuperclassTypeParameter(Class<?> clazz) {
+    // 获取父类(包含该父类的泛型)
     Type genericSuperclass = clazz.getGenericSuperclass();
     if (genericSuperclass instanceof Class) {
       // try to climb up the hierarchy until meet something useful
@@ -44,10 +48,11 @@ public abstract class TypeReference<T> {
       throw new TypeException("'" + getClass() + "' extends TypeReference but misses the type parameter. "
         + "Remove the extension or add a type parameter to it.");
     }
-
+    // 获取第一个实际泛型类
     Type rawType = ((ParameterizedType) genericSuperclass).getActualTypeArguments()[0];
     // TODO remove this when Reflector is fixed to return Types
     if (rawType instanceof ParameterizedType) {
+      // 必须是泛型才获取
       rawType = ((ParameterizedType) rawType).getRawType();
     }
 
