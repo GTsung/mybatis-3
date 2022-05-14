@@ -28,11 +28,15 @@ import org.apache.ibatis.reflection.wrapper.ObjectWrapper;
 import org.apache.ibatis.reflection.wrapper.ObjectWrapperFactory;
 
 /**
+ * 对象元数据，提供了对象的属性值的获得和设置，对BaseWrapper操作进一步增强
  * @author Clinton Begin
  */
 public class MetaObject {
 
+  // 原始Object对象
   private final Object originalObject;
+
+  // 封装过的Object对象
   private final ObjectWrapper objectWrapper;
   private final ObjectFactory objectFactory;
   private final ObjectWrapperFactory objectWrapperFactory;
@@ -47,17 +51,30 @@ public class MetaObject {
     if (object instanceof ObjectWrapper) {
       this.objectWrapper = (ObjectWrapper) object;
     } else if (objectWrapperFactory.hasWrapperFor(object)) {
+      // 创建ObjectWrapper对象
       this.objectWrapper = objectWrapperFactory.getWrapperFor(this, object);
     } else if (object instanceof Map) {
+      // MapWrapper
       this.objectWrapper = new MapWrapper(this, (Map) object);
     } else if (object instanceof Collection) {
+      // CollectionWrapper
       this.objectWrapper = new CollectionWrapper(this, (Collection) object);
     } else {
+      // BeanWrapper
       this.objectWrapper = new BeanWrapper(this, object);
     }
   }
 
-  public static MetaObject forObject(Object object, ObjectFactory objectFactory, ObjectWrapperFactory objectWrapperFactory, ReflectorFactory reflectorFactory) {
+  /**
+   * 创建MetaObject对象
+   * @param object 原始Object对象
+   * @param objectFactory
+   * @param objectWrapperFactory
+   * @param reflectorFactory
+   * @return MetaObject对象
+   */
+  public static MetaObject forObject(Object object, ObjectFactory objectFactory, ObjectWrapperFactory objectWrapperFactory,
+                                     ReflectorFactory reflectorFactory) {
     if (object == null) {
       return SystemMetaObject.NULL_META_OBJECT;
     } else {
@@ -110,6 +127,7 @@ public class MetaObject {
   }
 
   public Object getValue(String name) {
+    // 对属性名称分词
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
       MetaObject metaValue = metaObjectForProperty(prop.getIndexedName());
@@ -141,7 +159,13 @@ public class MetaObject {
     }
   }
 
+  /**
+   * 创建指定属性的MetaObject对象
+   * @param name
+   * @return
+   */
   public MetaObject metaObjectForProperty(String name) {
+    // 获得属性值
     Object value = getValue(name);
     return MetaObject.forObject(value, objectFactory, objectWrapperFactory, reflectorFactory);
   }
