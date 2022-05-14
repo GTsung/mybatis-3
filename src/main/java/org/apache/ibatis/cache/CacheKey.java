@@ -22,21 +22,51 @@ import java.util.List;
 import org.apache.ibatis.reflection.ArrayUtil;
 
 /**
+ * 多个对象组成的缓存键
  * @author Clinton Begin
  */
 public class CacheKey implements Cloneable, Serializable {
 
   private static final long serialVersionUID = 1146682552656046210L;
 
+  /**
+   * 单例，空缓存键
+   */
   public static final CacheKey NULL_CACHE_KEY = new NullCacheKey();
 
+  /**
+   * {@link #multiplier} 的默认值
+   */
   private static final int DEFAULT_MULTIPLYER = 37;
+
+  /**
+   * {@link #hashcode} 的默认值
+   */
   private static final int DEFAULT_HASHCODE = 17;
 
+  /**
+   * hashcode求值的系数
+   */
   private final int multiplier;
+
+  /**
+   * 缓存键的hashcode
+   */
   private int hashcode;
+
+  /**
+   * 校验和
+   */
   private long checksum;
+
+  /**
+   * {@link #update(Object)} 的数量
+   */
   private int count;
+
+  /**
+   * 计算{@link #hashcode} 的对象的集合
+   */
   // 8/21/2017 - Sonarlint flags this as needing to be marked transient.  While true if content is not serializable, this is not always true and thus should not be marked transient.
   private List<Object> updateList;
 
@@ -49,6 +79,7 @@ public class CacheKey implements Cloneable, Serializable {
 
   public CacheKey(Object[] objects) {
     this();
+    // 遍历整个数组，计算数组元素的hashcode及校验和，并将元素放入到updateList中
     updateAll(objects);
   }
 
