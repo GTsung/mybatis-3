@@ -116,16 +116,19 @@ public class CacheKey implements Cloneable, Serializable {
 
     final CacheKey cacheKey = (CacheKey) object;
 
+    // 哈希码
     if (hashcode != cacheKey.hashcode) {
       return false;
     }
+    // 校验和
     if (checksum != cacheKey.checksum) {
       return false;
     }
+    // 数量
     if (count != cacheKey.count) {
       return false;
     }
-
+    // 比较集合中的元素
     for (int i = 0; i < updateList.size(); i++) {
       Object thisObject = updateList.get(i);
       Object thatObject = cacheKey.updateList.get(i);
@@ -152,7 +155,9 @@ public class CacheKey implements Cloneable, Serializable {
 
   @Override
   public CacheKey clone() throws CloneNotSupportedException {
+    // 克隆CacheKey
     CacheKey clonedCacheKey = (CacheKey) super.clone();
+    // 创建updateList数组，避免原数组修改
     clonedCacheKey.updateList = new ArrayList<>(updateList);
     return clonedCacheKey;
   }
