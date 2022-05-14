@@ -21,16 +21,52 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
+ * 类型转换器
+ * 两种：执行sql时由Java类型的参数转换为JDBC类型
+ *       获取结果集数据将JDBC类型转换为java类型
  * @author Clinton Begin
  */
 public interface TypeHandler<T> {
 
+  /**
+   * 设置PreparedStatement的指定参数
+   * javaType => JDBC Type
+   * @param ps 执行sql的对象
+   * @param i 参数占位符的位置
+   * @param parameter 参数
+   * @param jdbcType JDBC类型
+   * @throws SQLException
+   */
   void setParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) throws SQLException;
 
+  /**
+   * 获得ResultSet的指定字段的值
+   * JDBC TYPE => JAVA TYPE
+   * @param rs 结果集对象
+   * @param columnName 字段名
+   * @return 值
+   * @throws SQLException
+   */
   T getResult(ResultSet rs, String columnName) throws SQLException;
 
+  /**
+   * 获得ResultSet的指定字段的值
+   * JDBC TYPE => JAVA TYPE
+   * @param rs 结果集对象
+   * @param columnIndex 字段位置
+   * @return
+   * @throws SQLException
+   */
   T getResult(ResultSet rs, int columnIndex) throws SQLException;
 
+  /**
+   * 获得 CallableStatement 的指定字段的值
+   * JDBC TYPE => JAVA TYPE
+   * @param cs CallableStatement对象，支持调用存储过程
+   * @param columnIndex 字段位置
+   * @return
+   * @throws SQLException
+   */
   T getResult(CallableStatement cs, int columnIndex) throws SQLException;
 
 }
