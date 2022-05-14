@@ -37,8 +37,14 @@ import org.apache.ibatis.io.Resources;
  */
 public class TypeAliasRegistry {
 
+  /**
+   * 类型与别名的映射
+   */
   private final Map<String, Class<?>> TYPE_ALIASES = new HashMap<>();
 
+  /**
+   * 初始化默认的类型与别名
+   */
   public TypeAliasRegistry() {
     registerAlias("string", String.class);
 
@@ -110,9 +116,11 @@ public class TypeAliasRegistry {
       // issue #748
       String key = string.toLowerCase(Locale.ENGLISH);
       Class<T> value;
+      // 首先从TYPE_ALIASES获取
       if (TYPE_ALIASES.containsKey(key)) {
         value = (Class<T>) TYPE_ALIASES.get(key);
       } else {
+        // 直接获得对应类
         value = (Class<T>) Resources.classForName(string);
       }
       return value;
@@ -139,11 +147,14 @@ public class TypeAliasRegistry {
   }
 
   public void registerAlias(Class<?> type) {
+    // 默认为简单类名
     String alias = type.getSimpleName();
+    // 如果有注解，使用注册上的名字
     Alias aliasAnnotation = type.getAnnotation(Alias.class);
     if (aliasAnnotation != null) {
       alias = aliasAnnotation.value();
     }
+    // 注册类型与别名的注册表
     registerAlias(alias, type);
   }
 
@@ -152,6 +163,7 @@ public class TypeAliasRegistry {
       throw new TypeException("The parameter alias cannot be null");
     }
     // issue #748
+    // 转换成小写
     String key = alias.toLowerCase(Locale.ENGLISH);
     if (TYPE_ALIASES.containsKey(key) && TYPE_ALIASES.get(key) != null && !TYPE_ALIASES.get(key).equals(value)) {
       throw new TypeException("The alias '" + alias + "' is already mapped to the value '" + TYPE_ALIASES.get(key).getName() + "'.");
@@ -161,6 +173,7 @@ public class TypeAliasRegistry {
 
   public void registerAlias(String alias, String value) {
     try {
+      // 通过类名的字符串，获得对应的类
       registerAlias(alias, Resources.classForName(value));
     } catch (ClassNotFoundException e) {
       throw new TypeException("Error registering type alias "+alias+" for "+value+". Cause: " + e, e);
