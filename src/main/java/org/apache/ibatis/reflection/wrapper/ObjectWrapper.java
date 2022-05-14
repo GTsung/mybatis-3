@@ -89,6 +89,13 @@ public interface ObjectWrapper {
    */
   boolean hasGetter(String name);
 
+  /**
+   * 创建指定属性的值
+   * @param name
+   * @param prop
+   * @param objectFactory
+   * @return
+   */
   MetaObject instantiatePropertyValue(String name, PropertyTokenizer prop, ObjectFactory objectFactory);
 
   boolean isCollection();
