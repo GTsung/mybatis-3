@@ -379,27 +379,34 @@ public class PooledDataSource implements DataSource {
   protected void pushConnection(PooledConnection conn) throws SQLException {
 
     synchronized (state) {
+      // 从激活的连接集合中移除该连接
       state.activeConnections.remove(conn);
       if (conn.isValid()) {
+        // 是否超过空闲连接上限，并且和当前连接池的标识匹配
         if (state.idleConnections.size() < poolMaximumIdleConnections && conn.getConnectionTypeCode() == expectedConnectionTypeCode) {
+          // 统计连接使用时长
           state.accumulatedCheckoutTime += conn.getCheckoutTime();
           if (!conn.getRealConnection().getAutoCommit()) {
             conn.getRealConnection().rollback();
           }
+          // 创建连接对象并添加到空闲的连接集合
           PooledConnection newConn = new PooledConnection(conn.getRealConnection(), this);
           state.idleConnections.add(newConn);
           newConn.setCreatedTimestamp(conn.getCreatedTimestamp());
           newConn.setLastUsedTimestamp(conn.getLastUsedTimestamp());
+          // 设置原连接失效
           conn.invalidate();
           if (log.isDebugEnabled()) {
             log.debug("Returned connection " + newConn.getRealHashCode() + " to pool.");
           }
+          // 唤醒正在等待获取连接的线程
           state.notifyAll();
         } else {
           state.accumulatedCheckoutTime += conn.getCheckoutTime();
           if (!conn.getRealConnection().getAutoCommit()) {
             conn.getRealConnection().rollback();
           }
+          // 关闭真正的数据库连接
           conn.getRealConnection().close();
           if (log.isDebugEnabled()) {
             log.debug("Closed connection " + conn.getRealHashCode() + ".");
