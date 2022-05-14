@@ -28,5 +28,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface MappedTypes {
+
+  /**
+   * @return 匹配的javaType类型的数组，放在自定义的类型转换器上
+   */
   Class<?>[] value();
 }
