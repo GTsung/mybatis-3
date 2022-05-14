@@ -31,10 +31,18 @@ public class PoolState {
   protected final List<PooledConnection> idleConnections = new ArrayList<>();
 
   /**
-   *
+   * 激活的连接列表
    */
   protected final List<PooledConnection> activeConnections = new ArrayList<>();
+
+  /**
+   * 获取连接的次数
+   */
   protected long requestCount = 0;
+
+  /**
+   * 获取连接的时间
+   */
   protected long accumulatedRequestTime = 0;
   protected long accumulatedCheckoutTime = 0;
   protected long claimedOverdueConnectionCount = 0;
