@@ -30,9 +30,25 @@ import org.apache.ibatis.cache.Cache;
  * @author Clinton Begin
  */
 public class SoftCache implements Cache {
+
+  /**
+   * 强引用的key的队列
+   */
   private final Deque<Object> hardLinksToAvoidGarbageCollection;
+
+  /**
+   * 被GC回收的 WeakEntry 集合
+   */
   private final ReferenceQueue<Object> queueOfGarbageCollectedEntries;
+
+  /**
+   * 缓存
+   */
   private final Cache delegate;
+
+  /**
+   * {@link #hardLinksToAvoidGarbageCollection}的大小
+   */
   private int numberOfHardLinks;
 
   public SoftCache(Cache delegate) {
@@ -49,6 +65,7 @@ public class SoftCache implements Cache {
 
   @Override
   public int getSize() {
+    // 查看被GC回收的队列，如果有值则将缓存中对应的项移除
     removeGarbageCollectedItems();
     return delegate.getSize();
   }
@@ -70,8 +87,10 @@ public class SoftCache implements Cache {
     @SuppressWarnings("unchecked") // assumed delegate cache is totally managed by this cache
     SoftReference<Object> softReference = (SoftReference<Object>) delegate.getObject(key);
     if (softReference != null) {
+      // 获取弱引用引用的对象
       result = softReference.get();
       if (result == null) {
+        // 移除
         delegate.removeObject(key);
       } else {
         // See #586 (and #335) modifications need more than a read lock
