@@ -37,17 +37,38 @@ import org.apache.ibatis.io.Resources;
  */
 public class UnpooledDataSource implements DataSource {
 
+  /**
+   * Driver类加载器
+   */
   private ClassLoader driverClassLoader;
+
+  /**
+   * Driver属性
+   */
   private Properties driverProperties;
+
+  /**
+   * 已注册的Driver映射
+   */
   private static Map<String, Driver> registeredDrivers = new ConcurrentHashMap<>();
 
+  /**
+   * Driver类名
+   */
   private String driver;
+
+  /**
+   * 数据库url
+   */
   private String url;
+
   private String username;
+
   private String password;
 
   // 是否自动提交
   private Boolean autoCommit;
+
   // 默认连接事务隔离级别
   private Integer defaultTransactionIsolationLevel;
 
@@ -209,9 +230,11 @@ public class UnpooledDataSource implements DataSource {
   }
 
   private synchronized void initializeDriver() throws SQLException {
+    // Driver若没有注册则初始化
     if (!registeredDrivers.containsKey(driver)) {
       Class<?> driverType;
       try {
+        // 创建Driver类
         if (driverClassLoader != null) {
           driverType = Class.forName(driver, true, driverClassLoader);
         } else {
@@ -219,7 +242,9 @@ public class UnpooledDataSource implements DataSource {
         }
         // DriverManager requires the driver to be loaded via the system ClassLoader.
         // http://www.kfu.com/~nsayer/Java/dyn-jdbc.html
+        // 获取Driver实例
         Driver driverInstance = (Driver)driverType.newInstance();
+        // 创建DriverProxy对象并注册到DriverManager
         DriverManager.registerDriver(new DriverProxy(driverInstance));
         registeredDrivers.put(driver, driverInstance);
       } catch (Exception e) {

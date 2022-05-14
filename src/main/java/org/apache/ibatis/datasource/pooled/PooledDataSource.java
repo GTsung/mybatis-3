@@ -40,6 +40,9 @@ public class PooledDataSource implements DataSource {
 
   private static final Log log = LogFactory.getLog(PooledDataSource.class);
 
+  /**
+   * 记录池化的状态
+   */
   private final PoolState state = new PoolState(this);
 
   // PooledDataSource组合了UnpooledDataSource
@@ -102,7 +105,9 @@ public class PooledDataSource implements DataSource {
   }
 
   public PooledDataSource(ClassLoader driverClassLoader, String driver, String url, String username, String password) {
+    // 创建UnpooledDataSource对象
     dataSource = new UnpooledDataSource(driverClassLoader, driver, url, username, password);
+    // 计算expectedConnectionTypeCode
     expectedConnectionTypeCode = assembleConnectionTypeCode(dataSource.getUrl(), dataSource.getUsername(), dataSource.getPassword());
   }
 
@@ -113,6 +118,7 @@ public class PooledDataSource implements DataSource {
 
   @Override
   public Connection getConnection() throws SQLException {
+    // 获取PooledConnection对象
     return popConnection(dataSource.getUsername(), dataSource.getPassword()).getProxyConnection();
   }
 
@@ -410,37 +416,50 @@ public class PooledDataSource implements DataSource {
   }
 
   private PooledConnection popConnection(String username, String password) throws SQLException {
+    // 标记，获取连接时，是否进行了等待
     boolean countedWait = false;
+    // 最终获取到的连接对象
     PooledConnection conn = null;
+    // 当前时间
     long t = System.currentTimeMillis();
+    // 记录当前方法，获取到坏连接的次数
     int localBadConnectionCount = 0;
 
     while (conn == null) {
       synchronized (state) {
+        // 如果空闲连接列表非空，则通过移除获取首个空闲的连接
         if (!state.idleConnections.isEmpty()) {
           // Pool has available connection
           conn = state.idleConnections.remove(0);
           if (log.isDebugEnabled()) {
             log.debug("Checked out connection " + conn.getRealHashCode() + " from pool.");
           }
+          // 无空闲连接
         } else {
           // Pool does not have available connection
+          // 如果激活的连接数量小于poolMaximumActiveConnections
           if (state.activeConnections.size() < poolMaximumActiveConnections) {
             // Can create new connection
+            // 创建新的连接
             conn = new PooledConnection(dataSource.getConnection(), this);
             if (log.isDebugEnabled()) {
               log.debug("Created connection " + conn.getRealHashCode() + ".");
             }
           } else {
             // Cannot create new connection
+            // 获得首个激活的连接
             PooledConnection oldestActiveConnection = state.activeConnections.get(0);
+            // 检查该连接是否超时
             long longestCheckoutTime = oldestActiveConnection.getCheckoutTime();
             if (longestCheckoutTime > poolMaximumCheckoutTime) {
               // Can claim overdue connection
+              // 连接超时，对连接超时的时间统计
               state.claimedOverdueConnectionCount++;
               state.accumulatedCheckoutTimeOfOverdueConnections += longestCheckoutTime;
               state.accumulatedCheckoutTime += longestCheckoutTime;
+              // 从活跃的连接集合中移除
               state.activeConnections.remove(oldestActiveConnection);
+              // 如果这个超时的连接非自动提交事务，则对事务进行回滚
               if (!oldestActiveConnection.getRealConnection().getAutoCommit()) {
                 try {
                   oldestActiveConnection.getRealConnection().rollback();
@@ -456,16 +475,20 @@ public class PooledDataSource implements DataSource {
                   log.debug("Bad connection. Could not roll back");
                 }
               }
+              // 创建新的连接对象
               conn = new PooledConnection(oldestActiveConnection.getRealConnection(), this);
               conn.setCreatedTimestamp(oldestActiveConnection.getCreatedTimestamp());
               conn.setLastUsedTimestamp(oldestActiveConnection.getLastUsedTimestamp());
+              // 设置超时的连接为无效状态
               oldestActiveConnection.invalidate();
               if (log.isDebugEnabled()) {
                 log.debug("Claimed overdue connection " + conn.getRealHashCode() + ".");
               }
             } else {
               // Must wait
+              // 未超时
               try {
+                // 对等待连接进行统计
                 if (!countedWait) {
                   state.hadToWaitCount++;
                   countedWait = true;
@@ -473,8 +496,11 @@ public class PooledDataSource implements DataSource {
                 if (log.isDebugEnabled()) {
                   log.debug("Waiting as long as " + poolTimeToWait + " milliseconds for connection.");
                 }
+                // 记录当前时间
                 long wt = System.currentTimeMillis();
+                // 等待至直到超时或连接归还时唤醒
                 state.wait(poolTimeToWait);
+                // 统计等待连接时间
                 state.accumulatedWaitTime += System.currentTimeMillis() - wt;
               } catch (InterruptedException e) {
                 break;
@@ -482,15 +508,19 @@ public class PooledDataSource implements DataSource {
             }
           }
         }
+        // 获取到连接
         if (conn != null) {
           // ping to server and check the connection is valid or not
+          // 测试连接是否有效
           if (conn.isValid()) {
+            // 非自动提交则回滚
             if (!conn.getRealConnection().getAutoCommit()) {
               conn.getRealConnection().rollback();
             }
             conn.setConnectionTypeCode(assembleConnectionTypeCode(dataSource.getUrl(), username, password));
             conn.setCheckoutTimestamp(System.currentTimeMillis());
             conn.setLastUsedTimestamp(System.currentTimeMillis());
+            // 添加到活跃的连接集合
             state.activeConnections.add(conn);
             state.requestCount++;
             state.accumulatedRequestTime += System.currentTimeMillis() - t;
@@ -498,6 +528,7 @@ public class PooledDataSource implements DataSource {
             if (log.isDebugEnabled()) {
               log.debug("A bad connection (" + conn.getRealHashCode() + ") was returned from the pool, getting another connection.");
             }
+            // 统计坏连接次数
             state.badConnectionCount++;
             localBadConnectionCount++;
             conn = null;
