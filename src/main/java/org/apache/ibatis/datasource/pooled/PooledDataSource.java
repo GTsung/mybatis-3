@@ -623,7 +623,9 @@ public class PooledDataSource implements DataSource {
    */
   public static Connection unwrapConnection(Connection conn) {
     if (Proxy.isProxyClass(conn.getClass())) {
+      // 传入的是代理对象
       InvocationHandler handler = Proxy.getInvocationHandler(conn);
+      // 而且连接实例是PooledConnection类型，则获取真实连接对象
       if (handler instanceof PooledConnection) {
         return ((PooledConnection) handler).getRealConnection();
       }
