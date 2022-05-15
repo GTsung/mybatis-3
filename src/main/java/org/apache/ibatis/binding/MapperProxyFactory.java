@@ -27,7 +27,14 @@ import org.apache.ibatis.session.SqlSession;
  */
 public class MapperProxyFactory<T> {
 
+  /**
+   * Mapper接口类型
+   */
   private final Class<T> mapperInterface;
+
+  /**
+   * 方法与 MapperMethod 的映射
+   */
   private final Map<Method, MapperMethod> methodCache = new ConcurrentHashMap<>();
 
   public MapperProxyFactory(Class<T> mapperInterface) {
@@ -48,6 +55,7 @@ public class MapperProxyFactory<T> {
   }
 
   public T newInstance(SqlSession sqlSession) {
+    // 创建MapperProxy代理对象
     final MapperProxy<T> mapperProxy = new MapperProxy<>(sqlSession, mapperInterface, methodCache);
     return newInstance(mapperProxy);
   }
