@@ -32,5 +32,9 @@ public @interface Results {
    * The name of the result map.
    */
   String id() default "";
+
+  /**
+   * @return {@link Result}
+   */
   Result[] value() default {};
 }

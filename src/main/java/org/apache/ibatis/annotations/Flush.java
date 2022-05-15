@@ -31,4 +31,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Flush {
+
+    // 如果使用了该注解，定义在Mapper接口中的方法能调用SqlSession#flushStatements()方法
 }
