@@ -23,8 +23,20 @@ import org.apache.ibatis.transaction.TransactionFactory;
  * @author Clinton Begin
  */
 public final class Environment {
+
+  /**
+   * 环境编号
+   */
   private final String id;
+
+  /**
+   * TransactionFactory对象
+   */
   private final TransactionFactory transactionFactory;
+
+  /**
+   * DataSource对象
+   */
   private final DataSource dataSource;
 
   public Environment(String id, TransactionFactory transactionFactory, DataSource dataSource) {

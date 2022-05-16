@@ -29,7 +29,17 @@ import javax.sql.DataSource;
  */
 public interface DatabaseIdProvider {
 
+  /**
+   * 设置属性
+   * @param p Properties对象
+   */
   void setProperties(Properties p);
 
+  /**
+   * 获得数据库标识
+   * @param dataSource 数据源
+   * @return 数据库标识
+   * @throws SQLException DB发生异常时抛出
+   */
   String getDatabaseId(DataSource dataSource) throws SQLException;
 }
