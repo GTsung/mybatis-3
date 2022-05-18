@@ -171,11 +171,14 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private void buildStatementFromContext(List<XNode> list, String requiredDatabaseId) {
+    // 遍历 <select/> <insert/> <update/> <delete/> 节点
     for (XNode context : list) {
+      // 创建 XMLStatementBuilder 对象，进行解析
       final XMLStatementBuilder statementParser = new XMLStatementBuilder(configuration, builderAssistant, context, requiredDatabaseId);
       try {
         statementParser.parseStatementNode();
       } catch (IncompleteElementException e) {
+        // 解析失败，添加到 configuration 中
         configuration.addIncompleteStatement(statementParser);
       }
     }

@@ -43,11 +43,13 @@ public class XMLIncludeTransformer {
   }
 
   public void applyIncludes(Node source) {
+    // 添加属性
     Properties variablesContext = new Properties();
     Properties configurationVariables = configuration.getVariables();
     if (configurationVariables != null) {
       variablesContext.putAll(configurationVariables);
     }
+    // 处理 <include/>
     applyIncludes(source, variablesContext, false);
   }
 
@@ -57,17 +59,27 @@ public class XMLIncludeTransformer {
    * @param variablesContext Current context for static variables with values
    */
   private void applyIncludes(Node source, final Properties variablesContext, boolean included) {
+    // 如果是 <include/> 标签
     if (source.getNodeName().equals("include")) {
+
+      // 获得 <sql/> 对应的节点
       Node toInclude = findSqlFragment(getStringAttribute(source, "refid"), variablesContext);
+
+      // 获得包含<include/>标签内的属性
       Properties toIncludeContext = getVariablesContext(source, variablesContext);
+
+      // 递归调用 #applyIncludes(...) 方法，继续替换，注意此处是<sql/>对应的节点
       applyIncludes(toInclude, toIncludeContext, true);
       if (toInclude.getOwnerDocument() != source.getOwnerDocument()) {
         toInclude = source.getOwnerDocument().importNode(toInclude, true);
       }
+      // 将<include/> 替换成<sql/>节点
       source.getParentNode().replaceChild(toInclude, source);
+      // 将 <sql/>子节点添加到 <sql/>节点前面
       while (toInclude.hasChildNodes()) {
         toInclude.getParentNode().insertBefore(toInclude.getFirstChild(), toInclude);
       }
+      // 移除 <include/>标签自身
       toInclude.getParentNode().removeChild(toInclude);
     } else if (source.getNodeType() == Node.ELEMENT_NODE) {
       if (included && !variablesContext.isEmpty()) {
@@ -90,10 +102,14 @@ public class XMLIncludeTransformer {
   }
 
   private Node findSqlFragment(String refid, Properties variables) {
+    // 因为 refid 可能是动态变量，所以进行替换
     refid = PropertyParser.parse(refid, variables);
+    // 获得完整的refid，格式为 "${namespace}.${refid}"
     refid = builderAssistant.applyCurrentNamespace(refid, true);
     try {
+      // 获得对应的<sql/>节点
       XNode nodeToInclude = configuration.getSqlFragments().get(refid);
+      // 获得Node节点进行克隆
       return nodeToInclude.getNode().cloneNode(true);
     } catch (IllegalArgumentException e) {
       throw new IncompleteElementException("Could not find SQL statement to include with refid '" + refid + "'", e);
@@ -105,6 +121,7 @@ public class XMLIncludeTransformer {
   }
 
   /**
+   * 获得包含 <include/> 标签内的属性 Properties 对象
    * Read placeholders and their values from include node definition.
    * @param node Include node instance
    * @param inheritedVariablesContext Current context used for replace variables in new variables values
@@ -127,8 +144,10 @@ public class XMLIncludeTransformer {
         }
       }
     }
+    // 如果 <include/>标签内没有属性，直接使用 inheritedVariablesContext 即可
     if (declaredProperties == null) {
       return inheritedVariablesContext;
+      // 如果 <include/>标签内有属性，则创建新的newProperties集合，
     } else {
       Properties newProperties = new Properties();
       newProperties.putAll(inheritedVariablesContext);
