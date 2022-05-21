@@ -97,11 +97,22 @@ import org.apache.ibatis.type.UnknownTypeHandler;
  */
 public class MapperAnnotationBuilder {
 
+  /**
+   * SQL 操作注解集合
+   */
   private static final Set<Class<? extends Annotation>> SQL_ANNOTATION_TYPES = new HashSet<>();
+
+  /**
+   * SQL 操作提供者注解集合
+   */
   private static final Set<Class<? extends Annotation>> SQL_PROVIDER_ANNOTATION_TYPES = new HashSet<>();
 
   private final Configuration configuration;
   private final MapperBuilderAssistant assistant;
+
+  /**
+   * Mapper 接口类
+   */
   private final Class<?> type;
 
   static {
@@ -125,17 +136,25 @@ public class MapperAnnotationBuilder {
 
   public void parse() {
     String resource = type.toString();
+    // 当前Mapper接口没有被加载
     if (!configuration.isResourceLoaded(resource)) {
+      // 加载对应的 XML Mapper
       loadXmlResource();
+      // 标记该Mapper接口已经加载过
       configuration.addLoadedResource(resource);
+      // 设置 namespace 属性
       assistant.setCurrentNamespace(type.getName());
+      // 解析@CacheNamespace注解
       parseCache();
+      // 解析 @CacheNamespaceRef 注解
       parseCacheRef();
+      // 遍历每个方法，解析其上的注解
       Method[] methods = type.getMethods();
       for (Method method : methods) {
         try {
           // issue #237
           if (!method.isBridge()) {
+            // 执行解析
             parseStatement(method);
           }
         } catch (IncompleteElementException e) {
@@ -190,6 +209,7 @@ public class MapperAnnotationBuilder {
       Integer size = cacheDomain.size() == 0 ? null : cacheDomain.size();
       Long flushInterval = cacheDomain.flushInterval() == 0 ? null : cacheDomain.flushInterval();
       Properties props = convertToProperties(cacheDomain.properties());
+      // 创建Cache对象
       assistant.useNewCache(cacheDomain.implementation(), cacheDomain.eviction(), flushInterval, size, cacheDomain.readWrite(), cacheDomain.blocking(), props);
     }
   }
@@ -209,16 +229,20 @@ public class MapperAnnotationBuilder {
   private void parseCacheRef() {
     CacheNamespaceRef cacheDomainRef = type.getAnnotation(CacheNamespaceRef.class);
     if (cacheDomainRef != null) {
+      // 获得各种属性
       Class<?> refType = cacheDomainRef.value();
       String refName = cacheDomainRef.name();
+      // 校验，如果 refType 和 refName 都为空抛异常
       if (refType == void.class && refName.isEmpty()) {
         throw new BuilderException("Should be specified either value() or name() attribute in the @CacheNamespaceRef");
       }
       if (refType != void.class && !refName.isEmpty()) {
         throw new BuilderException("Cannot use both value() and name() attribute in the @CacheNamespaceRef");
       }
+      // 获得最终的 namespace 属性
       String namespace = (refType != void.class) ? refType.getName() : refName;
       try {
+        // 获得指向的Cache对象
         assistant.useCacheRef(namespace);
       } catch (IncompleteElementException e) {
         configuration.addIncompleteCacheRef(new CacheRefResolver(assistant, namespace));
@@ -297,6 +321,7 @@ public class MapperAnnotationBuilder {
   }
 
   void parseStatement(Method method) {
+    // 获得参数类型
     Class<?> parameterTypeClass = getParameterType(method);
     LanguageDriver languageDriver = getLanguageDriver(method);
     SqlSource sqlSource = getSqlSourceFromAnnotations(method, parameterTypeClass, languageDriver);
@@ -361,6 +386,7 @@ public class MapperAnnotationBuilder {
         resultMapId = parseResultMap(method);
       }
 
+      // 创建 MappedStatement 对象
       assistant.addMappedStatement(
           mappedStatementId,
           sqlSource,
@@ -404,9 +430,11 @@ public class MapperAnnotationBuilder {
     for (Class<?> currentParameterType : parameterTypes) {
       if (!RowBounds.class.isAssignableFrom(currentParameterType) && !ResultHandler.class.isAssignableFrom(currentParameterType)) {
         if (parameterType == null) {
+          // 单参数则为参数类型
           parameterType = currentParameterType;
         } else {
           // issue #135
+          // 多参数则为 ParamMap 类型
           parameterType = ParamMap.class;
         }
       }
