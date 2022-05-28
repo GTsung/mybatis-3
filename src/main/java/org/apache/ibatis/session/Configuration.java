@@ -119,6 +119,10 @@ public class Configuration {
   protected String logPrefix;
   protected Class <? extends Log> logImpl;
   protected Class <? extends VFS> vfsImpl;
+
+  /**
+   * 本地缓存范围
+   */
   protected LocalCacheScope localCacheScope = LocalCacheScope.SESSION;
   protected JdbcType jdbcTypeForNull = JdbcType.OTHER;
   protected Set<String> lazyLoadTriggerMethods = new HashSet<>(Arrays.asList("equals", "clone", "hashCode", "toString"));
@@ -201,6 +205,11 @@ public class Configuration {
    * 已加载资源的集合
    */
   protected final Set<String> loadedResources = new HashSet<>();
+
+  /**
+   * Cache对象集合， 一个KEY为Namespace的Map对象
+   * KEY:命名空间 namespace
+   */
   protected final Map<String, XNode> sqlFragments = new StrictMap<>("XML fragments parsed from previous mappers");
 
   protected final Collection<XMLStatementBuilder> incompleteStatements = new LinkedList<>();

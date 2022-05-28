@@ -33,16 +33,26 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 /**
+ * 通过在mybatis-config.xml中，配置如下开启二级缓存 <setting name="cacheEnabled" value = "true"/>
+ * CachingExecutor支持开启二级缓存
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
 public class CachingExecutor implements Executor {
 
+  /**
+   * 被委托的Executor
+   */
   private final Executor delegate;
+
+  /**
+   * TransactionalCacheManager
+   */
   private final TransactionalCacheManager tcm = new TransactionalCacheManager();
 
   public CachingExecutor(Executor delegate) {
     this.delegate = delegate;
+    // 被当前执行器包装
     delegate.setExecutorWrapper(this);
   }
 

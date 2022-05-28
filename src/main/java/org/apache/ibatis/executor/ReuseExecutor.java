@@ -34,10 +34,17 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 /**
+ * 每次开始读或写操作，优先从缓存中获取对应的statement对象，如果不存在，则创建
+ * 执行完成后，不关闭该Statement对象
+ *
  * @author Clinton Begin
  */
 public class ReuseExecutor extends BaseExecutor {
 
+  /**
+   * statement的缓存
+   * KEY: SQL
+   */
   private final Map<String, Statement> statementMap = new HashMap<>();
 
   public ReuseExecutor(Configuration configuration, Transaction transaction) {
@@ -63,6 +70,7 @@ public class ReuseExecutor extends BaseExecutor {
   @Override
   protected <E> Cursor<E> doQueryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql) throws SQLException {
     Configuration configuration = ms.getConfiguration();
+    // 创建StatementHandler
     StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, null, boundSql);
     Statement stmt = prepareStatement(handler, ms.getStatementLog());
     return handler.queryCursor(stmt);
@@ -81,14 +89,17 @@ public class ReuseExecutor extends BaseExecutor {
     Statement stmt;
     BoundSql boundSql = handler.getBoundSql();
     String sql = boundSql.getSql();
+    // 缓存中存在，则从缓存中获得Statement或PrepareStatement对象
     if (hasStatementFor(sql)) {
       stmt = getStatement(sql);
       applyTransactionTimeout(stmt);
     } else {
+      // 重新创建添加到缓存中
       Connection connection = getConnection(statementLog);
       stmt = handler.prepare(connection, transaction.getTimeout());
       putStatement(sql, stmt);
     }
+    // 设置sql上的参数
     handler.parameterize(stmt);
     return stmt;
   }
