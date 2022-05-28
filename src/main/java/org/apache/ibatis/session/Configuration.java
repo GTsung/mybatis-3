@@ -636,9 +636,17 @@ public class Configuration {
     return newExecutor(transaction, defaultExecutorType);
   }
 
+  /**
+   * 获得Executor对象
+   * @param transaction 事务对象
+   * @param executorType 执行器类型
+   * @return
+   */
   public Executor newExecutor(Transaction transaction, ExecutorType executorType) {
-    executorType = executorType == null ? defaultExecutorType : executorType;
-    executorType = executorType == null ? ExecutorType.SIMPLE : executorType;
+    // 获得执行器类型
+    executorType = executorType == null ? defaultExecutorType : executorType; // 默认
+    executorType = executorType == null ? ExecutorType.SIMPLE : executorType; // ExecutorType.SIMPLE
+    // 创建对应实现的Executor对象
     Executor executor;
     if (ExecutorType.BATCH == executorType) {
       executor = new BatchExecutor(this, transaction);
@@ -647,9 +655,11 @@ public class Configuration {
     } else {
       executor = new SimpleExecutor(this, transaction);
     }
+    // 如果开启缓存，创建CachingExecutor进行包装
     if (cacheEnabled) {
       executor = new CachingExecutor(executor);
     }
+    // 应用插件
     executor = (Executor) interceptorChain.pluginAll(executor);
     return executor;
   }

@@ -25,6 +25,9 @@ import org.apache.ibatis.cache.decorators.TransactionalCache;
  */
 public class TransactionalCacheManager {
 
+  /**
+   * Cache 和 TransactionalCache 映射
+   */
   private final Map<Cache, TransactionalCache> transactionalCaches = new HashMap<>();
 
   public void clear(Cache cache) {
@@ -32,10 +35,14 @@ public class TransactionalCacheManager {
   }
 
   public Object getObject(Cache cache, CacheKey key) {
+    // 首先获得cache对应的TransactionalCache对象
+    // 然后从TransactionalCache对象中获取key对应的值
     return getTransactionalCache(cache).getObject(key);
   }
 
   public void putObject(Cache cache, CacheKey key, Object value) {
+    // 先获取Cache对应的TransactionalCache对象
+    // 然后添加KV到TransactionalCache对象中
     getTransactionalCache(cache).putObject(key, value);
   }
 
@@ -51,6 +58,11 @@ public class TransactionalCacheManager {
     }
   }
 
+  /**
+   * 创建TransactionalCache
+   * @param cache
+   * @return
+   */
   private TransactionalCache getTransactionalCache(Cache cache) {
     return transactionalCaches.computeIfAbsent(cache, TransactionalCache::new);
   }
