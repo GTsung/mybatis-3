@@ -26,13 +26,18 @@ import org.apache.ibatis.session.Configuration;
 public class ForEachSqlNode implements SqlNode {
   public static final String ITEM_PREFIX = "__frch_";
 
+  // 集合的表达式
   private final ExpressionEvaluator evaluator;
   private final String collectionExpression;
   private final SqlNode contents;
   private final String open;
   private final String close;
   private final String separator;
+
+  // 集合项
   private final String item;
+
+  // 索引变量
   private final String index;
   private final Configuration configuration;
 
@@ -51,22 +56,28 @@ public class ForEachSqlNode implements SqlNode {
   @Override
   public boolean apply(DynamicContext context) {
     Map<String, Object> bindings = context.getBindings();
+    // 获得遍历集合的Iterable对象，用于遍历
     final Iterable<?> iterable = evaluator.evaluateIterable(collectionExpression, bindings);
     if (!iterable.iterator().hasNext()) {
       return true;
     }
     boolean first = true;
+    // 添加open到sql
     applyOpen(context);
     int i = 0;
     for (Object o : iterable) {
+      // 记录原始的context对象
       DynamicContext oldContext = context;
+      // 生成新的context
       if (first || separator == null) {
         context = new PrefixedContext(context, "");
       } else {
         context = new PrefixedContext(context, separator);
       }
+      // 获得唯一编号
       int uniqueNumber = context.getUniqueNumber();
       // Issue #709
+      // 绑定到context中
       if (o instanceof Map.Entry) {
         @SuppressWarnings("unchecked")
         Map.Entry<Object, Object> mapEntry = (Map.Entry<Object, Object>) o;
@@ -76,14 +87,19 @@ public class ForEachSqlNode implements SqlNode {
         applyIndex(context, i, uniqueNumber);
         applyItem(context, o, uniqueNumber);
       }
+      // 执行contents的应用
       contents.apply(new FilteredDynamicContext(configuration, context, index, item, uniqueNumber));
+      // 判断prefix是否已经插入
       if (first) {
         first = !((PrefixedContext) context).isPrefixApplied();
       }
+      // 恢复
       context = oldContext;
       i++;
     }
+    // 添加close
     applyClose(context);
+    // 移除index和item对应的绑定
     context.getBindings().remove(item);
     context.getBindings().remove(index);
     return true;
