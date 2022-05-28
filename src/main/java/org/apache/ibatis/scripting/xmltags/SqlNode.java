@@ -16,8 +16,15 @@
 package org.apache.ibatis.scripting.xmltags;
 
 /**
+ * 每个XMLNode 会解析成对应的SqlNode对象
  * @author Clinton Begin
  */
 public interface SqlNode {
+
+  /**
+   * 应用当前 SQL NODE 节点
+   * @param context 上下文
+   * @return 当前 sql Node 节点 是否应用成功
+   */
   boolean apply(DynamicContext context);
 }
