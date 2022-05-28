@@ -51,22 +51,29 @@ public abstract class BaseStatementHandler implements StatementHandler {
   protected BoundSql boundSql;
 
   protected BaseStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+    // 获得configuration
     this.configuration = mappedStatement.getConfiguration();
     this.executor = executor;
     this.mappedStatement = mappedStatement;
     this.rowBounds = rowBounds;
 
+    // 获得typeHandlerRegistry和ObjectFactory对象
     this.typeHandlerRegistry = configuration.getTypeHandlerRegistry();
     this.objectFactory = configuration.getObjectFactory();
 
+    // boundSql则一般是写操作，先获取自增主键，再创建BoundSql对象
     if (boundSql == null) { // issue #435, get the key before calculating the statement
+      // 获得自增主键
       generateKeys(parameterObject);
+      // 创建BoundSql对象
       boundSql = mappedStatement.getBoundSql(parameterObject);
     }
 
     this.boundSql = boundSql;
 
+    // 创建ParameterHandler对象
     this.parameterHandler = configuration.newParameterHandler(mappedStatement, parameterObject, boundSql);
+    // 创建ResultSetHandler对象
     this.resultSetHandler = configuration.newResultSetHandler(executor, mappedStatement, rowBounds, parameterHandler, resultHandler, boundSql);
   }
 
