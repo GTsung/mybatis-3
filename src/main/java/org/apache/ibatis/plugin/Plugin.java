@@ -30,8 +30,21 @@ import org.apache.ibatis.reflection.ExceptionUtil;
  */
 public class Plugin implements InvocationHandler {
 
+  /**
+   * 目标对象
+   */
   private final Object target;
+
+  /**
+   * 拦截器
+   */
   private final Interceptor interceptor;
+
+  /**
+   * 拦截的方法映射
+   * KEY:类
+   * VALUE:方法集合
+   */
   private final Map<Class<?>, Set<Method>> signatureMap;
 
   private Plugin(Object target, Interceptor interceptor, Map<Class<?>, Set<Method>> signatureMap) {
@@ -41,10 +54,14 @@ public class Plugin implements InvocationHandler {
   }
 
   public static Object wrap(Object target, Interceptor interceptor) {
+    // 获得的拦截的方法映射
     Map<Class<?>, Set<Method>> signatureMap = getSignatureMap(interceptor);
+    // 获得目标类的类型
     Class<?> type = target.getClass();
+    // 获得目标类的接口集合
     Class<?>[] interfaces = getAllInterfaces(type, signatureMap);
     if (interfaces.length > 0) {
+      // 创建代理对象
       return Proxy.newProxyInstance(
           type.getClassLoader(),
           interfaces,
